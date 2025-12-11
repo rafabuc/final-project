@@ -2,7 +2,7 @@
 
 # Experiment name for MLflow
 experiment_name: multimodal_fake_news_detection
-version: 1.8
+version: 1.9
 tracking_uri: sqlite:///mlflow.db
 #v1.7 transform as another  also drop-out as 0.3
 #v1.8 drop out as 0.5  transform as another  start in model 1.6

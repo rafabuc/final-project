@@ -100,6 +100,18 @@ This system treats the detection task as a **Multimodal Classification Problem**
                     [0: Real, 1: Fake]
 ```
 
+---
+
+> **📖 For detailed architecture documentation, see [ARCHITECTURE.md](ARCHITECTURE.md)**
+>
+> This document covers:
+> - Component specifications (Vision Branch, Text Branch, Fusion Layer)
+> - Design decisions and architectural choices
+> - Fusion strategies (why late fusion vs early fusion)
+> - Implementation details and parameter counts
+
+---
+
 ### Architecture Components
 
 #### 1. Vision Branch (The "Eye")
@@ -120,8 +132,17 @@ This system treats the detection task as a **Multimodal Classification Problem**
 
 To prevent "Catastrophic Forgetting" of the pretrained weights, we employed a **Two-Stage Transfer Learning** strategy:
 
-1.  **Phase 1 (Head Warming):** The backbones (EfficientNet/DistilBERT) were frozen. Only the fusion head was trained to align the random weights with the pretrained features.
+1.  **Phase 1 (Head Warming):** The backbones (EfficientNet/DistilBERT) were frozen. Only the fusion head was trained to align the random weights with the pretrained features. Parameters were frozen for the backbones. 
+freeze_vision: true 
+freeze_text: true 
+learning_rate: 0.0001
+Best Model: src/trainig/checkpoints/best_model_1.6.pth
+
 2.  **Phase 2 (Fine-Tuning):** The entire model was unfrozen and trained with a very low learning rate (`2e-5`) to fine-tune the feature extractors for fake news patterns.
+freeze_vision: false 
+freeze_text: false 
+learning_rate: 0.00005 
+Best Model: src/trainig/checkpoints/best_model_1.7.pth
 
 ## 📊 Results
 
@@ -183,7 +204,6 @@ final-project/
 ├── notebooks/                   # Jupyter notebooks
 │   └── inference.ipynb         # Inference examples and API usage
 │
-├── scripts/                     # Utility scripts
 │
 ├── mlruns/                      # MLflow experiment tracking (root level)
 │
@@ -392,7 +412,7 @@ Performance metrics calculation.
 - CUDA 11.0+ (for GPU support)
 - 8GB+ RAM
 - 4GB+ GPU memory (recommended)
-- Git, Git LFS (for model versioning)
+- Git, 
 - DVC (for data versioning)
 
 ### Step 1: Clone Repository
@@ -436,7 +456,6 @@ dvc pull multimodal_model.onnx.dvc
 dvc pull multimodal_model.onnx.data.dvc
 dvc pull data.dvc
 dvc pull src/training/checkpoints.dvc
-dvc pull src/training/mlruns.dvc
 dvc pull src/training/outputs.dvc
 ```
 
@@ -466,7 +485,6 @@ After running `dvc pull`, you will have:
             
             ├── best_model_1.8.pth      # Improved model checkpoint in phase 2 (fine-tuning vision encoder takes best_model_1.7.pth as initial checkpoint)
             
-        ├── mlruns/               # MLflow experiment tracking
         └── outputs/              # Training outputs
 ```
 
@@ -510,11 +528,68 @@ pip install -r requirements-dev.txt
 
 The project uses **Hydra** for hierarchical configuration management.
 
-### Configuration Files
+### 📚 Complete Configuration Documentation
 
-Edit `configs/config.yaml` for training.
+**⚠️ IMPORTANT:** Before training or modifying the model, please review the comprehensive configuration guide:
 
+**➡️ [📖 CONFIG.md - Complete Configuration Reference](CONFIG.md)**
 
+This essential guide covers:
+- ✅ **Model Loading & Versioning** - How to load checkpoints and version models (`load_model`, `best_model_name`, `version`)
+- ✅ **Transfer Learning Controls** - Freeze/unfreeze layers for speed vs accuracy (`freeze_vision`, `freeze_text`)
+- ✅ **Training Parameters** - Learning rate, dropout, optimizer settings and their impact
+- ✅ **Performance Impact Analysis** - How each parameter affects training speed, GPU memory, and accuracy
+- ✅ **Workflow Examples** - Full fine-tuning, frozen backbones, incremental training scenarios
+- ✅ **Best Practices** - Preventing catastrophic forgetting, hyperparameter tuning strategies
+- ✅ **Command Line Overrides** - How to override any configuration from the command line
+- ✅ **Troubleshooting** - Common configuration issues and solutions
+
+### ⚡ Quick Configuration Reference
+
+**Critical Variables for Incremental Training:**
+
+```yaml
+# configs/model/multimodal.yaml
+load_model: true                    # ← Load previous checkpoint before training
+best_model_name: best_model_1.7.pth # ← Source checkpoint file to start from
+version: 1.8                        # ← New version identifier for this training run
+
+freeze_vision: false                # ← Fine-tune vision backbone (EfficientNet)
+freeze_text: false                  # ← Fine-tune text backbone (DistilBERT)
+dropout_rate: 0.3                   # ← Regularization strength (0.3-0.5)
+
+# configs/training/default.yaml
+learning_rate: 0.00002              # ← Low LR for fine-tuning (2e-5)
+optimizer: adamw                    # ← Recommended for transfer learning
+use_scheduler: true                 # ← Dynamic LR with OneCycleLR
+num_epochs: 5                       # ← Training epochs
+batch_size: 32                      # ← Samples per batch
+```
+
+**Performance Impact Quick Guide:**
+- `freeze_vision=true` → ⚡ **2x faster training**, 💾 **40% less GPU memory**, 📊 Lower accuracy
+- `freeze_text=true` → ⚡ **2.5x faster training**, 💾 **50% less GPU memory**, 📊 Lower accuracy
+- `learning_rate ≤ 2e-5` → 🔒 **Required for stable fine-tuning** (prevents catastrophic forgetting)
+- `dropout_rate: 0.5` → 📈 Better generalization, lower training accuracy
+- `dropout_rate: 0.3` → 📊 Higher training accuracy, possible overfitting
+
+**👉 See [CONFIG.md](CONFIG.md) for complete parameter documentation with code references and examples.**
+
+### Configuration Files Structure
+
+```
+configs/
+├── config.yaml              # Main training configuration
+├── config_inference.yaml    # Inference configuration
+├── model/
+│   └── multimodal.yaml     # Model architecture & checkpointing ⭐
+├── data/
+│   └── fakeddit.yaml       # Dataset paths & preprocessing
+├── training/
+│   └── default.yaml        # Training hyperparameters ⭐
+└── inference/
+    └── default.yaml        # Inference settings
+```
 
 ---
 
@@ -555,6 +630,20 @@ mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5000
 ---
 
 ## Inference
+
+---
+
+> **📖 Complete Inference Guide: [INFERENCE_INSTRUCTIONS.md](INFERENCE_INSTRUCTIONS.md)**
+>
+> Comprehensive documentation covering:
+> - 🔍 **Single Sample Prediction** - How to predict on individual image-text pairs
+> - 📊 **Batch Prediction** - Processing multiple samples from CSV files
+> - 🚀 **API Usage** - FastAPI endpoints (PyTorch and ONNX versions)
+> - ⚡ **ONNX Inference** - High-performance production deployment
+> - 🐛 **Troubleshooting** - Common issues and solutions
+> - 💡 **Best Practices** - Tips for optimal inference performance
+
+---
 
 The inference system supports both single sample and batch predictions using Hydra configuration.
 
@@ -897,6 +986,12 @@ dvc checkout
 ---
 
 ## Architecture Details
+
+---
+
+> **📖 For comprehensive architecture documentation, see [ARCHITECTURE.md](ARCHITECTURE.md)**
+
+---
 
 ### Component Specifications
 
@@ -1305,7 +1400,7 @@ This project was created for the MLOps Zoomcamp course by **DataTalks.Club**
 ```bash
 # Setup
 git clone <repo-url> && cd final-project
-git lfs install && dvc pull
+git  dvc pull
 pip install -r requirements-dev.txt
 
 # Training

@@ -344,7 +344,7 @@ class MultimodalTrainer:
                     # Save checkpoint
                     checkpoint_path = os.path.join(
                         self.config.get('checkpoint_dir', 'checkpoints'),
-                        f'best_model_{self.config.get('version', '1.0')}.pth'
+                        f"best_model_{self.config.get('version', '1.0')}.pth"
                     )
                     os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
 
