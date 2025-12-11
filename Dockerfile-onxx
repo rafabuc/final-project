@@ -1,0 +1,18 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Instalar dependencias
+COPY requirements-deploy-onnx.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar código
+COPY api-onnx.py inference_onnx.py  ./
+
+# Copiar el modelo ONNX generado en el paso 1
+COPY multimodal_model.onnx .
+COPY multimodal_model.onnx.data .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "api-onnx:app", "--host", "0.0.0.0", "--port", "8000"]

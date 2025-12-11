@@ -1,0 +1,14 @@
+# Main inference configuration file for Multimodal Fake News Detection
+
+defaults:
+  - model: multimodal
+  - data: fakeddit
+  - inference: default
+  - _self_
+
+# Hydra configuration for inference
+hydra:
+  run:
+    dir: outputs/inference/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  job:
+    chdir: false  # Don't change working directory

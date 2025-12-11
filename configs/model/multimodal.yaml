@@ -1,0 +1,26 @@
+# Model architecture configuration
+
+# Embedding dimensions
+embedding_dim: 512
+
+# Fusion layer configuration
+fusion_hidden_dim: 256
+dropout_rate:  0.3 # 0.3 en v1.7  0.5 en v1.6
+
+# load model weights from previous training
+load_model: true
+best_model_name: best_model_1.6.pth
+
+# Backbone freezing (set to true for faster training, false for fine-tuning)
+freeze_vision: false #true #false  
+freeze_text: false #true #false
+
+# Vision branch (EfficientNet-B0)
+vision:
+  pretrained: true
+  backbone: efficientnet_b0
+
+# Text branch (DistilBERT)
+text:
+  pretrained_model: distilbert-base-uncased
+  hidden_size: 768

@@ -1,0 +1,102 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Jupyter
+.ipynb_checkpoints
+*.ipynb
+
+# Data and outputs (large files)
+data/
+*.csv
+*.jpg
+*.jpeg
+*.png
+*.mp4
+*.avi
+
+# Model checkpoints (can be large)
+checkpoints/
+*.pth
+*.ckpt
+*.h5
+
+# MLflow artifacts
+mlruns/
+mlartifacts/
+
+# Logs
+logs/
+*.log
+
+# Git
+.git/
+.gitignore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentation
+README.md
+*.md
+docs/
+
+
+
+
+__pycache__
+*.pyc
+.git
+.gitignore
+.env/
+.claude/
+dataset_ignore/
+ignore/
+venv/
+outputs/
+multirun/
+mlruns/
+data/    <-- Don't copy your training images!
+*.png
+*.jpg
+src/training/outputs/
+src/training/mlruns/
+src/training/checkpoints/best_model_1.6.pth
+src/training/checkpoints/best_model_1.8.pth

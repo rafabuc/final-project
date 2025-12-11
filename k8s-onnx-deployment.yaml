@@ -1,0 +1,67 @@
+# --- 1. DEPLOYMENT (La Aplicación) ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fake-news-deployment
+  labels:
+    app: fake-news-api
+spec:
+  replicas: 1  # Ejecute 1 replica
+  selector:
+    matchLabels:
+      app: fake-news-api  # Match the label in the template
+  template:
+    metadata:
+      labels:
+        app: fake-news-api
+    spec:
+      containers:
+      - name: fake-news-api #api-container       
+        image: fake-news-api:v1_onnx
+        imagePullPolicy: Never #Always to pull the image from the registry  minikube image load fake-news-api:v1_onnx
+        ports:
+        - containerPort: 8000
+        
+        # --- Resources (Adjusted for ONNX) ---
+        resources:
+          requests:
+            memory: "512Mi"  # Ensure at least 512MB
+            cpu: "250m"      # 0.25 vCPU
+          limits:
+            memory: "1Gi"    # Kill if uses more than 1GB
+            cpu: "1000m"     # Maximum 1 vCPU
+
+        # --- Health Checks (Self-healing) ---
+        # Liveness: Is the container alive? If it fails, K8s restarts it.
+        livenessProbe:
+          httpGet:
+            path: /docs
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 15
+        
+        # Readiness: Ready to receive traffic? If it fails, don't send users.
+        readinessProbe:
+          httpGet:
+            path: /docs
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
+---
+
+# --- 2. SERVICE (The Gateway) ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fake-news-service
+spec:
+  # LoadBalancer creates a real public IP (in AWS/GCP/Azure)
+  # If you use Minikube, use 'NodePort' or run 'minikube tunnel'
+  type: NodePort 
+  selector:
+    app: fake-news-api
+  ports:
+    - protocol: TCP
+      port: 80        # The port exposed to the world (HTTP standard)
+      targetPort: 8000 # The internal port of your container (FastAPI)

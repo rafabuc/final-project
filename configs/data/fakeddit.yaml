@@ -1,0 +1,32 @@
+# Data configuration for Fakeddit dataset
+
+# Dataset paths
+csv_file: / #/path/to/fakeddit.csv  # UPDATE THIS PATH
+root_dir: ../../data/ #/path/to/images/       # UPDATE THIS PATH (directory containing images)
+images_dir_train: ../../data/images/train/
+images_dir_val: ../../data/images/val/
+
+# Rows to read in csv  -1 for all
+n_rows: 1000
+# Column names in CSV
+text_column: text_content
+image_column: image_path
+label_column: label
+
+# Data splits
+train_split: 0.8  # 80% train, 20% validation
+
+# Image preprocessing
+image_size: 224  # EfficientNet-B0 input size
+
+# Text preprocessing
+max_length: 128  # Maximum token length for DistilBERT
+
+# Data augmentation (applied only during training)
+augmentation:
+  horizontal_flip: true
+  rotation_degrees: 15
+  color_jitter:
+    brightness: 0.2
+    contrast: 0.2
+    saturation: 0.2

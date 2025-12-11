@@ -1,0 +1,53 @@
+# Inference configuration
+
+# Mode: single or batch
+mode: batch  # Options: single, batch
+
+# Model checkpoint
+checkpoint:
+  path: ./src/training/checkpoints/best_model_1.7.pth
+
+  device: null  # Options: cuda, cpu, null (auto-detect)
+
+# Single prediction mode
+single:
+  #image_path: ./data/images/test/1p74v3.jpg  # Path to image file
+  #text: Me jumping in a big leaf pile  # News article text
+  #image_path: ./data/images/test/beonif.jpg  # Path to image file
+  #text: Saddam Hussein is executed (2006 Colorized)  # News article text
+  image_path: ./data/images/test/c7jxj5.jpg  # Path to image file
+  text: This frog sitting on a light  # News article text
+
+
+# Batch prediction mode
+batch:
+  csv_file: ./data/test.csv  # Path to CSV with columns: image_path, text_content
+  output_file: ./data/test-predictions.csv  # Output file for predictions
+  root_dir: ./data/images/test/  # Root directory for images (if paths in CSV are relative)
+  n_rows: 200
+# Text preprocessing
+text:
+  max_length: 128
+  tokenizer: distilbert-base-uncased
+
+# Image preprocessing
+image:
+  size: 224
+  mode: val  # Use validation transforms (no augmentation)
+
+# Output options
+output:
+  verbose: true  # Print detailed results
+  save_probabilities: true  # Save raw probabilities in output
+  save_confidence: true  # Save confidence scores
+  threshold: 0.5  # Classification threshold
+
+# Batch processing
+batch_processing:
+  batch_size: 32  # Process multiple samples at once
+  num_workers: 4  # DataLoader workers
+
+
+freeze_vision: false #true #false  
+freeze_text: false #true #false
+dropout_rate:  0.3  # for v1.7

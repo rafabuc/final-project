@@ -1,0 +1,94 @@
+.env/**
+.claude/**
+.specify/**
+ignore/**
+
+dataset_ignore/**
+src/training/checkpoints/**.pth
+multimodal_model.onnx.data
+multimodal_model.onnx
+commands
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# Jupyter Notebook
+#.ipynb_checkpoints
+#*.ipynb
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# MLflow (exclude from Git, keep directory structure)
+mlruns/
+mlartifacts/
+src/training/mlruns/
+src/training/outputs/
+.mlflow/
+!src/training/mlruns/.gitkeep
+!src/training/outputs/.gitkeep
+
+# Hydra
+outputs/
+multirun/
+.hydra/
+
+# Checkpoints (tracked by Git LFS - these extensions are in .gitattributes)
+# *.pth files are tracked by Git LFS, not ignored
+# *.pt files are tracked by Git LFS, not ignored
+*.ckpt
+
+# Logs
+*.log
+logs/
+training.log
+
+# Data (DVC-tracked, exclude actual files but keep .dvc metadata)
+data/images/
+# Note: data/images.dvc should be committed to Git
+*.csv
+*.json
+*.zip
+# Keep DVC directory
+!.dvc/
+!*.dvc
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+

@@ -1,0 +1,43 @@
+# Training configuration
+
+# Experiment name for MLflow
+experiment_name: multimodal_fake_news_detection
+version: 1.8
+tracking_uri: sqlite:///mlflow.db
+#v1.7 transform as another  also drop-out as 0.3
+#v1.8 drop out as 0.5  transform as another  start in model 1.6
+#        'sqlite': 'sqlite:///mlflow.db',
+#        'file': 'file:./mlruns',  # Deprecado pero funcional
+#        'postgresql': os.getenv('MLFLOW_TRACKING_URI', 'postgresql://localhost/mlflow'),
+#        'mysql': os.getenv('MLFLOW_TRACKING_URI', 'mysql://localhost/mlflow')
+# Training hyperparameters
+num_epochs: 5 #10 #0 #20
+batch_size: 32
+learning_rate: 0.00002  #0.00005 #0.0001
+weight_decay: 0.01
+
+# Optimizer
+optimizer: adamw  # Options: adam, adamw
+
+# Learning rate scheduler
+use_scheduler: true
+min_lr: 0.000001  # Minimum learning rate for cosine annealing
+
+# Data loading
+num_workers: 1 #4  # Number of workers for DataLoader
+
+# Checkpointing
+checkpoint_dir: ./checkpoints
+save_frequency: 5  # Save checkpoint every N epochs
+
+# Reproducibility
+seed: 42
+
+# Early stopping
+early_stopping:
+  enabled: true
+  patience: 5
+  min_delta: 0.001
+
+# Mixed precision training (for faster training on GPUs)
+mixed_precision: true

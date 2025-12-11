@@ -1,0 +1,41 @@
+# Use a lightweight Python 3.10 base image
+FROM python:3.10-slim
+
+# Set working directory inside the container
+WORKDIR /app
+
+# 1. Install system dependencies
+# libgl1-mesa-glx is sometimes required by opencv/vision libraries (good safety measure)
+#RUN apt-get update && apt-get install -y \
+#    libgl1-mesa-glx \
+#    && rm -rf /var/lib/apt/lists/*
+
+#RUN apt-get update && apt-get install -y \
+#    libgl1 \
+#    libglib2.0-0 \
+#    && rm -rf /var/lib/apt/lists/*
+
+# 2. Copy requirements.txt first (Docker cache optimization)
+COPY requirements-deploy-torch.txt ./requirements.txt
+
+# 3. Install Python dependencies
+# CRITICAL: We use --extra-index-url to get the CPU-ONLY version of PyTorch
+# This reduces image size from ~5GB to ~1GB
+RUN pip install --no-cache-dir -r requirements.txt \
+    --extra-index-url https://download.pytorch.org/whl/cpu
+
+# 4. Copy the application code
+# Copy the entire current directory to /app
+COPY . .
+
+# 5.  Copy the model to the root of the container
+# This takes the file from your local path and renames it to 'best_model.pth' in the container
+# para que coincida con lo que espera api.py por defecto.
+# COPY src/training/checkpoints/best_model_1.7.pth ./best_model.pth
+
+# 6. Expose the port
+EXPOSE 8000
+
+# 7. Command to run the API
+# We use host 0.0.0.0 to make it accessible outside the container
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]

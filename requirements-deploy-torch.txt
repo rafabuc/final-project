@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+python-multipart
+# PyTorch and Vision
+torch
+torchvision
+transformers
+pillow
+# Configuration
+hydra-core
+omegaconf
+# Data processing
+pandas
+tqdm
+scikit-learn

@@ -1,0 +1,20 @@
+# Main configuration file for Multimodal Fake News Detection
+
+defaults:
+  - model: multimodal
+  - data: fakeddit
+  - training: default
+  - _self_
+
+# Experiment tracking
+mlflow:
+  tracking_uri: ./mlruns
+  experiment_name: multimodal_fake_news_detection
+
+# Hydra configuration
+hydra:
+  run:
+    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: multirun/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.num}
