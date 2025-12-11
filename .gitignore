@@ -72,7 +72,7 @@ logs/
 training.log
 
 # Data (DVC-tracked, exclude actual files but keep .dvc metadata)
-data/images/
+data/images/**
 # Note: data/images.dvc should be committed to Git
 *.csv
 *.json
@@ -92,3 +92,4 @@ Thumbs.db
 *~
 
 
+/data

@@ -1,0 +1,5 @@
+outs:
+- md5: 1b1e2c41f28b8c84df971b14a480eae9
+  size: 288929792
+  hash: md5
+  path: multimodal_model.onnx.data

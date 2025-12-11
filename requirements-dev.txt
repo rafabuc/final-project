@@ -39,3 +39,5 @@ uvicorn
 python-multipart
 onnx 
 onnxscript
+dvc
+dvc-s3
