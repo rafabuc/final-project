@@ -1,5 +1,12 @@
 # Multimodal Fake News Detection System
 
+![Python](https://img.shields.io/badge/Python-3.11-blue.svg)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-orange.svg)
+![MLflow](https://img.shields.io/badge/MLflow-Tracking-green.svg)
+![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Version](https://img.shields.io/badge/Version-1.7-red.svg)
+
 A deep learning system that combines visual and textual information to detect fake news using a multimodal neural network architecture with MLflow tracking, Docker deployment, and Kubernetes orchestration.
 
 ---
@@ -10,26 +17,23 @@ A deep learning system that combines visual and textual information to detect fa
 2. [The Solution](#the-solution)
 3. [Model Architecture](#model-architecture)
 4. [Results](#-results)
-5. [Project Structure](#project-structure)
-6. [Main Source Files Description](#main-source-files-description)
-7. [Key Components](#key-components)
-8. [Installation](#installation)
-9. [Configuration](#configuration)
-10. [Training](#training)
-11. [Inference](#inference)
-12. [Deployment](#deployment)
-13. [Data and Model Versioning](#data-and-model-versioning)
-14. [Architecture Details](#architecture-details)
-15. [Performance](#performance)
+5. [Performance](#performance)
+6. [Project Structure](#project-structure)
+7. [Source Code Overview](#source-code-overview)
+8. [Key Components](#key-components)
+9. [Installation](#installation)
+10. [Configuration](#configuration)
+11. [Training](#training)
+12. [Inference](#inference)
+13. [Deployment](#deployment)
+14. [Data and Model Versioning](#data-and-model-versioning)
+15. [Architecture Details](#architecture-details)
 16. [Troubleshooting](#troubleshooting)
 17. [Advanced Usage](#advanced-usage)
-18. [File Size Guidelines](#file-size-guidelines)
-19. [Storage Options](#storage-options)
-20. [Best Practices](#best-practices)
-21. [References](#references)
-22. [Contact & Support](#contact--support)
-23. [Acknowledgments](#acknowledgments)
-24. [Quick Start Commands](#quick-start-commands)
+18. [Best Practices](#best-practices)
+19. [References](#references)
+20. [Contact & Support](#contact--support)
+21. [Acknowledgments](#acknowledgments)
 
 ---
 
@@ -132,17 +136,25 @@ This system treats the detection task as a **Multimodal Classification Problem**
 
 To prevent "Catastrophic Forgetting" of the pretrained weights, we employed a **Two-Stage Transfer Learning** strategy:
 
-1.  **Phase 1 (Head Warming):** The backbones (EfficientNet/DistilBERT) were frozen. Only the fusion head was trained to align the random weights with the pretrained features. Parameters were frozen for the backbones. 
-freeze_vision: true 
-freeze_text: true 
-learning_rate: 0.0001
-Best Model: src/trainig/checkpoints/best_model_1.6.pth
+**Phase 1 (Head Warming):**
+The backbones (EfficientNet/DistilBERT) were frozen. Only the fusion head was trained to align the random weights with the pretrained features.
 
-2.  **Phase 2 (Fine-Tuning):** The entire model was unfrozen and trained with a very low learning rate (`2e-5`) to fine-tune the feature extractors for fake news patterns.
-freeze_vision: false 
-freeze_text: false 
-learning_rate: 0.00005 
-Best Model: src/trainig/checkpoints/best_model_1.7.pth
+```yaml
+freeze_vision: true
+freeze_text: true
+learning_rate: 0.0001
+```
+**Best Model:** `src/training/checkpoints/best_model_1.6.pth`
+
+**Phase 2 (Fine-Tuning):**
+The entire model was unfrozen and trained with a very low learning rate to fine-tune the feature extractors for fake news patterns.
+
+```yaml
+freeze_vision: false
+freeze_text: false
+learning_rate: 0.00005
+```
+**Best Model:** `src/training/checkpoints/best_model_1.7.pth`
 
 ## 📊 Results
 
@@ -239,134 +251,17 @@ final-project/
 
 ---
 
-## Main Source Files Description
+## Source Code Overview
 
-### Data Module (`src/data/`)
+> **📖 For detailed source code documentation, see [ARCHITECTURE.md - Source Files Reference](ARCHITECTURE.md#source-files-reference)**
 
-#### `dataset.py`
-Custom PyTorch Dataset implementation for multimodal fake news detection.
-- **Class:** `MultimodalDataset`
-- **Features:**
-  - Loads image-text pairs from CSV files
-  - Handles image preprocessing and text tokenization
-  - Supports flexible column naming
-  - Returns batches with images, tokenized text, and labels
-- **Usage:** Training and inference data loading
+**Quick Overview:**
+- **Data Module** (`src/data/`): Dataset class, data loaders, image transforms
+- **Models Module** (`src/models/`): MultimodalNet, VisionBranch, TextBranch
+- **Training Module** (`src/training/`): Training script, trainer class, MLflow integration
+- **Utils Module** (`src/utils/`): Logging, metrics calculation
 
-#### `load_data.py`
-Data loading utilities and helper functions.
-- CSV file processing
-- Data validation and error handling
-- Path resolution for image files
-
-#### `transforms.py`
-Image transformation pipelines using torchvision.
-- **Training transforms:** RandomHorizontalFlip, RandomRotation, ColorJitter, normalization
-- **Validation/Test transforms:** Resize, normalization
-- ImageNet statistics normalization
-- Returns transforms for different modes (train/val/test)
-
----
-
-### Models Module (`src/models/`)
-
-#### `multimodal_net.py`
-Main multimodal architecture with late fusion strategy.
-- **Class:** `MultimodalNet`
-- **Architecture:**
-  - Combines vision and text branches
-  - Late fusion: concatenates embeddings (1024-dim)
-  - Fusion network: 1024 → 256 → 128 → 1
-  - Dropout layers for regularization
-- **Parameters:**
-  - `embedding_dim`: 512 (default)
-  - `fusion_hidden_dim`: 256 (default)
-  - `dropout_rate`: 0.4 (default)
-  - `freeze_vision`, `freeze_text`: Transfer learning control
-
-#### `vision_branch.py`
-Vision encoder using EfficientNet-B0.
-- **Class:** `VisionBranch`
-- **Architecture:**
-  - Pretrained EfficientNet-B0 backbone (ImageNet)
-  - Global Average Pooling: 1280-dim features
-  - Projection head: 1280 → 512 → 512
-  - ReLU activation and dropout
-- **Features:**
-  - Optional backbone freezing for transfer learning
-  - ~4M parameters
-
-#### `text_branch.py`
-Text encoder using DistilBERT.
-- **Class:** `TextBranch`
-- **Architecture:**
-  - Pretrained DistilBERT-base-uncased
-  - [CLS] token embedding: 768-dim
-  - Projection head: 768 → 512 → 512
-  - ReLU activation and dropout
-- **Features:**
-  - Optional backbone freezing
-  - ~66M parameters
-  - Handles input_ids and attention_mask
-
----
-
-### Training Module (`src/training/`)
-
-#### `train.py`
-Main training script with Hydra configuration.
-- **Functions:**
-  - Loads configuration via Hydra decorators
-  - Initializes dataloaders, model, optimizer
-  - Sets up MLflow experiment tracking
-  - Executes training loop via MultimodalTrainer
-  - Saves best model checkpoints
-- **Features:**
-  - Two-phase training (frozen → fine-tuned)
-  - OneCycleLR learning rate scheduling
-  - Automatic device detection (CPU/GPU)
-
-#### `trainer.py`
-Training loop implementation with MLflow integration.
-- **Class:** `MultimodalTrainer`
-- **Features:**
-  - Training and validation epochs
-  - Gradient clipping and mixed precision support
-  - MLflow logging (metrics, parameters, artifacts)
-  - Model checkpointing (best model based on validation loss)
-  - Progress tracking with tqdm
-  - Comprehensive metric calculation
-
-#### `visualization.py`
-Training visualization utilities.
-- Plotting functions for loss curves
-- Metric visualization
-- Confusion matrix plotting
-- ROC curve generation
-
----
-
-### Utils Module (`src/utils/`)
-
-#### `logging.py`
-Logging configuration and setup.
-- **Function:** `setup_logger()`
-- **Features:**
-  - Configurable log levels
-  - File and console handlers
-  - Formatted output with timestamps
-  - Logger name customization
-
-#### `metrics.py`
-Performance metrics calculation.
-- **Metrics implemented:**
-  - Accuracy
-  - Precision, Recall, F1-Score
-  - ROC-AUC
-  - Confusion Matrix
-- **Functions:**
-  - `calculate_metrics()`: Computes all metrics from predictions
-  - Binary classification metric utilities
+See ARCHITECTURE.md for complete details on each module and class.
 
 ---
 
@@ -378,8 +273,8 @@ Performance metrics calculation.
 - **Text Tokenization**: DistilBERT tokenizer with max_length=128
 
 ### 2. Model Architecture
-- **Vision Encoder**: ResNet-50 (pre-trained on ImageNet)
-  - Output: 2048-dim features -> 512-dim embeddings
+- **Vision Encoder**: EfficientNet-B0 (pre-trained on ImageNet)
+  - Output: 1280-dim features -> 512-dim embeddings
 - **Text Encoder**: DistilBERT (pre-trained)
   - Output: 768-dim features -> 512-dim embeddings
 - **Fusion Network**:
@@ -980,8 +875,32 @@ git lfs prune                # Clean LFS cache
 # Checkout specific data version
 git checkout v1.0
 dvc checkout
-
 ```
+
+---
+
+### File Size & Storage Guidelines
+
+**File Size Recommendations:**
+
+| Size | Recommendation | Tool |
+|------|----------------|------|
+| < 10MB | Regular Git | Git |
+| 10MB - 100MB | Git (with caution) or Git LFS | Git / Git LFS |
+| 100MB - 2GB | Git LFS | Git LFS |
+| > 2GB | DVC | DVC |
+| Datasets | Always DVC | DVC |
+
+**Storage Options:**
+
+| Option | Free Tier | Best For | Use Case |
+|--------|-----------|----------|----------|
+| **Google Drive** | 15GB | Personal projects | DVC remote for small teams |
+| **AWS S3** | 5GB (12mo) | Production | Scalable, reliable storage |
+| **GitHub LFS** | 1GB | Small checkpoints | Model files < 2GB |
+| **Local Storage** | Unlimited | Testing | Development and debugging |
+
+**Recommendation:** Use DVC with S3 for production, Google Drive for personal projects.
 
 ---
 
@@ -1299,29 +1218,6 @@ python export_onnx.py
 
 ---
 
-## File Size Guidelines
-
-| Size | Recommendation |
-|------|----------------|
-| < 10MB | Regular Git |
-| 10MB - 100MB | Git (with caution) or Git LFS |
-| 100MB - 2GB | Git LFS |
-| > 2GB | DVC |
-| Datasets | Always DVC |
-
----
-
-## Storage Options
-
-| Option | Free Tier | Best For |
-|--------|-----------|----------|
-| Google Drive | 15GB | Personal projects |
-| AWS S3 | 5GB (12mo) | Production |
-| GitHub LFS | 1GB | Small checkpoints |
-| Local | Unlimited | Testing |
-
----
-
 ## Best Practices
 
 ### Development
@@ -1389,40 +1285,8 @@ This project was created for the MLOps Zoomcamp course by **DataTalks.Club**
 
 ---
 
-**Last Updated:** 2025-12-10
+**Last Updated:** 2025-12
 **Version:** 1.7
-**License:** MIT
-
----
-
-## Quick Start Commands
-
-```bash
-# Setup
-git clone <repo-url> && cd final-project
-git  dvc pull
-pip install -r requirements-dev.txt
-
-# Training
-python src/training/train.py
-mlflow ui --backend-store-uri sqlite:///src/training/mlflow.db
-
-# Inference
-python inference.py inference.mode=single \
-  inference.single.image_path=test.jpg \
-  inference.single.text="Test news"
-
-# API
-uvicorn api:app --reload
-
-# Docker
-docker build -t fake-news-api:v1_onnx -f Dockerfile-onnx .
-docker run -d -p 8000:8000 fake-news-api:v1_onnx
-
-# Kubernetes
-kubectl apply -f k8s-onnx-deployment.yaml
-kubectl port-forward service/fake-news-service 8000:80
-```
 
 ---
 

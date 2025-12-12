@@ -321,6 +321,139 @@ class CrossAttentionFusion(nn.Module):
 ```
 
 
+---
+
+## Source Files Reference
+
+### Data Module (`src/data/`)
+
+#### `dataset.py`
+Custom PyTorch Dataset implementation for multimodal fake news detection.
+- **Class:** `MultimodalDataset`
+- **Features:**
+  - Loads image-text pairs from CSV files
+  - Handles image preprocessing and text tokenization
+  - Supports flexible column naming
+  - Returns batches with images, tokenized text, and labels
+- **Usage:** Training and inference data loading
+
+#### `load_data.py`
+Data loading utilities and helper functions.
+- CSV file processing
+- Data validation and error handling
+- Path resolution for image files
+
+#### `transforms.py`
+Image transformation pipelines using torchvision.
+- **Training transforms:** RandomHorizontalFlip, RandomRotation, ColorJitter, normalization
+- **Validation/Test transforms:** Resize, normalization
+- ImageNet statistics normalization
+- Returns transforms for different modes (train/val/test)
+
+---
+
+### Models Module (`src/models/`)
+
+#### `multimodal_net.py`
+Main multimodal architecture with late fusion strategy.
+- **Class:** `MultimodalNet`
+- **Architecture:**
+  - Combines vision and text branches
+  - Late fusion: concatenates embeddings (1024-dim)
+  - Fusion network: 1024 → 256 → 128 → 1
+  - Dropout layers for regularization
+- **Parameters:**
+  - `embedding_dim`: 512 (default)
+  - `fusion_hidden_dim`: 256 (default)
+  - `dropout_rate`: 0.4 (default)
+  - `freeze_vision`, `freeze_text`: Transfer learning control
+
+#### `vision_branch.py`
+Vision encoder using EfficientNet-B0.
+- **Class:** `VisionBranch`
+- **Architecture:**
+  - Pretrained EfficientNet-B0 backbone (ImageNet)
+  - Global Average Pooling: 1280-dim features
+  - Projection head: 1280 → 512 → 512
+  - ReLU activation and dropout
+- **Features:**
+  - Optional backbone freezing for transfer learning
+  - ~4M parameters
+
+#### `text_branch.py`
+Text encoder using DistilBERT.
+- **Class:** `TextBranch`
+- **Architecture:**
+  - Pretrained DistilBERT-base-uncased
+  - [CLS] token embedding: 768-dim
+  - Projection head: 768 → 512 → 512
+  - ReLU activation and dropout
+- **Features:**
+  - Optional backbone freezing
+  - ~66M parameters
+  - Handles input_ids and attention_mask
+
+---
+
+### Training Module (`src/training/`)
+
+#### `train.py`
+Main training script with Hydra configuration.
+- **Functions:**
+  - Loads configuration via Hydra decorators
+  - Initializes dataloaders, model, optimizer
+  - Sets up MLflow experiment tracking
+  - Executes training loop via MultimodalTrainer
+  - Saves best model checkpoints
+- **Features:**
+  - Two-phase training (frozen → fine-tuned)
+  - OneCycleLR learning rate scheduling
+  - Automatic device detection (CPU/GPU)
+
+#### `trainer.py`
+Training loop implementation with MLflow integration.
+- **Class:** `MultimodalTrainer`
+- **Features:**
+  - Training and validation epochs
+  - Gradient clipping and mixed precision support
+  - MLflow logging (metrics, parameters, artifacts)
+  - Model checkpointing (best model based on validation loss)
+  - Progress tracking with tqdm
+  - Comprehensive metric calculation
+
+#### `visualization.py`
+Training visualization utilities.
+- Plotting functions for loss curves
+- Metric visualization
+- Confusion matrix plotting
+- ROC curve generation
+
+---
+
+### Utils Module (`src/utils/`)
+
+#### `logging.py`
+Logging configuration and setup.
+- **Function:** `setup_logger()`
+- **Features:**
+  - Configurable log levels
+  - File and console handlers
+  - Formatted output with timestamps
+  - Logger name customization
+
+#### `metrics.py`
+Performance metrics calculation.
+- **Metrics implemented:**
+  - Accuracy
+  - Precision, Recall, F1-Score
+  - ROC-AUC
+  - Confusion Matrix
+- **Functions:**
+  - `calculate_metrics()`: Computes all metrics from predictions
+  - Binary classification metric utilities
+
+---
+
 ## References
 
 - EfficientNet: [Tan & Le, 2019](https://arxiv.org/abs/1905.11946)
