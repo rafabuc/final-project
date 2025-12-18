@@ -39,17 +39,26 @@ A deep learning system that combines visual and textual information to detect fa
 
 ## The Problem
 
-In the modern digital landscape, misinformation often manifests not just as fake text or manipulated images, but as a **semantic conflict** between the two. A real image can be captioned with a lie, or a real news story can be illustrated with a misleading image.
+In today's digital landscape, misinformation often manifests not as fake text or manipulated images alone, but as a **semantic conflict between modalities**. A real image can be paired with a misleading caption, or factual text can be illustrated with an unrelated or manipulated image.
 
-Traditional unimodal models (Text-only or Image-only) fail to catch these subtleties:
-* **Text Models** miss visual context.
-* **Image Models** cannot verify the factual claims in the caption.
+Traditional unimodal approaches fail to detect these cross-modal inconsistencies:
+* **Text-only models** miss visual context and image manipulation
+* **Image-only models** cannot verify factual claims in the caption
+* **Simple concatenation** fails to capture semantic alignment between modalities
 
 ---
 
 ## The Solution
 
-This system treats the detection task as a **Multimodal Classification Problem**. It processes the visual and textual streams independently to extract high-level feature representations, which are then fused to learn the cross-modal relationship. If the image and text features do not align semantically, the model classifies the content as **FAKE**.
+This system addresses fake news detection as a **multimodal learning problem**, leveraging both visual and textual information:
+
+**Approach:**
+1. Extract independent feature representations from image and text using pretrained encoders
+2. Project features into a shared embedding space
+3. Learn cross-modal semantic alignment through late fusion
+4. Classify content as REAL or FAKE based on multimodal consistency
+
+**Key Insight:** If image and text features do not align semantically (e.g., a war photo captioned as a peaceful protest), the model detects the inconsistency and flags the content as fake.
 
 ### Key Features
 
@@ -163,6 +172,17 @@ learning_rate: 0.00005
 | **Validation Accuracy** | ~74.1% | **84.2%** |
 | **Training Accuracy** | ~72.0% | **92.6%** |
 
+### Training Visualization
+
+**Phase 1 (Version 1.6) - Frozen Backbones:**
+
+![Training Curves 1.6](src/training/training_curves_1.6.png)
+![Confusion Matrix 1.6](src/training/confusion_matrix_1.6.png)
+
+**Phase 2 (Version 1.7) - Fine-Tuned Model:**
+
+![Training Curves 1.7](src/training/training_curves_1.7.png)
+![Confusion Matrix 1.7](src/training/confusion_matrix_1.7.png)
 
 ---
 
@@ -189,7 +209,15 @@ final-project/
 │   │   ├── visualization.py     # Training visualization
 │   │   ├── mlflow.db            # MLflow database
 │   │   ├── checkpoints/         # Model checkpoints (Git LFS)
-│   │   └── mlruns/              # MLflow experiment tracking
+│   │   ├── mlruns/              # MLflow experiment tracking
+│   │   ├── training_curves_1.4.png    # Training visualization (version 1.4)
+│   │   ├── confusion_matrix_1.4.png   # Confusion matrix (version 1.4)
+│   │   ├── training_curves_1.6.png    # Training visualization (version 1.6)
+│   │   ├── confusion_matrix_1.6.png   # Confusion matrix (version 1.6)
+│   │   ├── training_curves_1.7.png    # Training visualization (version 1.7)
+│   │   ├── confusion_matrix_1.7.png   # Confusion matrix (version 1.7)
+│   │   ├── training_curves_1.8.png    # Training visualization (version 1.8)
+│   │   └── confusion_matrix_1.8.png   # Confusion matrix (version 1.8)
 │   └── utils/
 │       ├── __init__.py
 │       ├── logging.py           # Logger setup
@@ -267,35 +295,24 @@ See ARCHITECTURE.md for complete details on each module and class.
 
 ## Key Components
 
+This section provides a quick overview of the system's main components. For detailed implementation, see the [Architecture Details](#architecture-details) section and [ARCHITECTURE.md](ARCHITECTURE.md).
+
 ### 1. Data Pipeline
-- **MultimodalDataset**: Custom PyTorch Dataset that loads images and text
-- **Image Transforms**: Data augmentation for training (RandomHorizontalFlip, RandomRotation, ColorJitter) and validation
+- **MultimodalDataset**: Custom PyTorch Dataset that loads images and text simultaneously
+- **Image Transforms**: Data augmentation for training (RandomHorizontalFlip, RandomRotation, ColorJitter)
 - **Text Tokenization**: DistilBERT tokenizer with max_length=128
 
-### 2. Model Architecture
-- **Vision Encoder**: EfficientNet-B0 (pre-trained on ImageNet)
-  - Output: 1280-dim features -> 512-dim embeddings
-- **Text Encoder**: DistilBERT (pre-trained)
-  - Output: 768-dim features -> 512-dim embeddings
-- **Fusion Network**:
-  - Concatenates vision and text embeddings (1024-dim)
-  - Two fully connected layers (1024 -> 256 -> 1)
-  - Dropout for regularization
-  - Sigmoid activation for binary classification
-
-### 3. Training Pipeline
+### 2. Training Pipeline
 - **Loss Function**: Binary Cross-Entropy Loss (BCELoss)
-- **Optimizer**: Adam or AdamW with weight decay
-- **Learning Rate Scheduler**: Cosine Annealing
+- **Optimizer**: AdamW with weight decay for stable training
+- **Learning Rate Scheduler**: OneCycleLR with cosine annealing
 - **Gradient Clipping**: max_norm=1.0 for stability
-- **MLflow Tracking**: Logs hyperparameters, metrics, and model artifacts
+- **MLflow Tracking**: Comprehensive experiment tracking including hyperparameters, metrics, and model artifacts
 
-### 4. Metrics
-- Accuracy
-- Precision, Recall, F1-Score
-- ROC-AUC
-- Confusion Matrix
-
+### 3. Evaluation Metrics
+- Accuracy, Precision, Recall, F1-Score
+- ROC-AUC for model discrimination ability
+- Confusion Matrix for error analysis
 
 ---
 
@@ -395,6 +412,9 @@ dvc remote list --verbose
 
 # Force re-download
 dvc pull --force
+```
+
+---
 
 ### Step 3: Create Virtual Environment
 
@@ -830,21 +850,12 @@ git push  # Metadata to GitHub
 #### Download Data (New User)
 
 ```bash
-
 # Pull data from DVC
 dvc pull
 
 # Verify
 ls data/images/
 ```
-
----
-
-
-
-#### Daily Workflow
-
-
 
 ---
 
@@ -906,11 +917,9 @@ dvc checkout
 
 ## Architecture Details
 
----
-
 > **📖 For comprehensive architecture documentation, see [ARCHITECTURE.md](ARCHITECTURE.md)**
 
----
+This section provides a quick reference to the architecture components. For detailed documentation including design decisions, parameter counts, and implementation details, please refer to [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ### Component Specifications
 
